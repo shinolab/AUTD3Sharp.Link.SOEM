@@ -172,7 +172,7 @@ def check_if_all_native_methods_called() -> None:
                     defined_methods.add(result.group(1))
 
     used_methods = set()
-    pattern = re.compile("NativeMethods.*?\\.(AUTD.*?)\\(")
+    pattern = re.compile("NativeMethods.*?\\.(AUTD.*?)[\\(|;]")
 
     paths: set[Path] = set()
     paths |= set(Path("src").rglob("*.cs"))
