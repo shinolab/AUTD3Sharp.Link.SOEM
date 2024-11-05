@@ -9,8 +9,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="AUTD3Sharp" Version="29.0.0-rc.4.1" />
-    <PackageReference Include="AUTD3Sharp.Link.SOEM" Version="29.0.0-rc.4.1" />
+    <PackageReference Include="AUTD3Sharp" Version="29.0.0-rc.5" />
+    <PackageReference Include="AUTD3Sharp.Link.SOEM" Version="29.0.0-rc.5" />
   </ItemGroup>
 
 </Project>
