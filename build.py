@@ -421,11 +421,18 @@ def util_update_ver(args) -> None:  # noqa: ANN001
     tests_proj.write_text(content, encoding="utf-8")
 
     with working_dir("unity"):
+        version_tokens = version.split(".")
+        if "-" in version_tokens[2]:
+            version_tokens[2] = version_tokens[2].split("-")[0]
+            unity_version = ".".join(version_tokens[:3])
+        else:
+            unity_version = version
+
         package_json = Path("Assets/package.json")
         content = package_json.read_text()
         content = re.sub(
             r'"version": "(.*)"',
-            f'"version": "{version}"',
+            f'"version": "{unity_version}"',
             content,
             flags=re.MULTILINE,
         )
