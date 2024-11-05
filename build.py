@@ -274,9 +274,9 @@ def should_update_dll_unity(config: Config, version: str) -> bool:
 
 
 def copy_dll_unity(config: Config) -> None:
-    with Path("unity/Assets/package.json").open() as f:
+    with Path("src/AUTD3Sharp.Link.SOEM.csproj").open() as f:
         content = f.read()
-        version = re.search(r'"version": "(.*)"', content).group(1).split(".")
+        version = re.search(r"<Version>(.*)</Version>", content).group(1).split(".")
         version = ".".join(version[:4]) if version[2].endswith("rc") else ".".join(version[:3])
 
     if not should_update_dll_unity(config, version):

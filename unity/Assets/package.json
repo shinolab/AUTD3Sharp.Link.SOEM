@@ -2,7 +2,7 @@
     "name": "com.shinolab.autd3-link-soem",
     "displayName": "autd3-unity-link-soem",
     "description": "autd3-link-soem library wrapper for Unity",
-    "version": "29.0.0-rc.4.1",
+    "version": "29.0.0",
     "author": "Shun Suzuki",
     "unity": "2021.3",
     "keywords": [

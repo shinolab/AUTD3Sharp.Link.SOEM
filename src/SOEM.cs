@@ -161,11 +161,13 @@ namespace AUTD3Sharp.Link
                 };
             }
 #else
+#pragma warning disable CA2255
             [ModuleInitializer]
             public static void Init()
             {
                 AUTD3Sharp.Tracing.ExtTracing += NativeMethodsLinkSOEM.AUTDLinkSOEMTracingInit;
             }
+#pragma warning restore CA2255
 #endif
         }
     }
