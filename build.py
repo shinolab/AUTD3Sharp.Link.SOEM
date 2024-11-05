@@ -367,7 +367,7 @@ def util_update_ver(args) -> None:  # noqa: ANN001
         proj.write_text(content)
 
     src_proj = Path("src/AUTD3Sharp.Link.SOEM.csproj")
-    content = src_proj.read_text()
+    content = src_proj.read_text(encoding="utf-8")
     content = re.sub(
         r"<Version>(.*)</Version>",
         f"<Version>{version}</Version>",
@@ -403,6 +403,22 @@ def util_update_ver(args) -> None:  # noqa: ANN001
         flags=re.MULTILINE,
     )
     nuspec.write_text(content)
+
+    tests_proj = Path("tests/tests.csproj")
+    content = tests_proj.read_text(encoding="utf-8")
+    content = re.sub(
+        r'"AUTD3Sharp" Version="(.*)"',
+        f'"AUTD3Sharp" Version="{version}"',
+        content,
+        flags=re.MULTILINE,
+    )
+    content = re.sub(
+        r'"AUTD3Sharp\.Derive" Version="(.*)"',
+        f'"AUTD3Sharp.Derive" Version="{version}"',
+        content,
+        flags=re.MULTILINE,
+    )
+    tests_proj.write_text(content, encoding="utf-8")
 
     with working_dir("unity"):
         package_json = Path("Assets/package.json")
