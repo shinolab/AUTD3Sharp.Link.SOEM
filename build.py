@@ -19,16 +19,16 @@ from tools.autd3_build_utils.autd3_build_utils import (
     remove,
     rremove,
     run_command,
+    substitute_in_file,
     working_dir,
 )
 
 
 class Config(BaseConfig):
-    release: bool
     no_examples: bool
 
     def __init__(self, args) -> None:  # noqa: ANN001
-        super().__init__()
+        super().__init__(args)
 
         self.release = getattr(args, "release", False)
         self.no_examples = getattr(args, "no_examples", False)
@@ -326,6 +326,14 @@ def unity_build(args) -> None:  # noqa: ANN001
     )
     config_dir = config.release and "Release" or "Debug"
     for derive in Path(f"src/obj/{config_dir}/net8.0/generated/AUTD3Sharp.Derive").rglob("*.cs"):
+        substitute_in_file(
+            derive,
+            [
+                (r"WithSyncTolerance\(global::System.TimeSpan value\)", "WithSyncToleranceNs(ulong value)"),
+                ("SyncTolerance = value;", "SyncToleranceNs = value;"),
+            ],
+            flags=re.MULTILINE,
+        )
         shutil.copy(derive, "unity/Assets/Scripts/Derive/")
 
 
