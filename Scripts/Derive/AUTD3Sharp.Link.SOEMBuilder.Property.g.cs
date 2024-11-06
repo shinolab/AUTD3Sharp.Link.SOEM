@@ -8,10 +8,11 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
-namespace AUTD3Sharp.Link {
+namespace AUTD3Sharp.Link
+{
     public partial class SOEMBuilder
     {
-                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [ExcludeFromCodeCoverage]
         public SOEMBuilder WithIfname(string value)
         {
@@ -55,9 +56,9 @@ namespace AUTD3Sharp.Link {
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [ExcludeFromCodeCoverage]
-        public SOEMBuilder WithSyncTolerance(global::System.TimeSpan value)
+        public SOEMBuilder WithSyncToleranceNs(ulong value)
         {
-            SyncTolerance = value;
+            SyncToleranceNs = value;
             return this;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -95,5 +96,5 @@ namespace AUTD3Sharp.Link {
             ErrHandler = value;
             return this;
         }
-    }   
+    }
 }

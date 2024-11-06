@@ -38,8 +38,14 @@ namespace AUTD3Sharp.Link
         [Property]
         public SyncMode SyncMode { get; private set; } = SyncMode.DC;
 
+
+#if UNITY_2020_2_OR_NEWER
+        [Property]
+        public ulong SyncToleranceNs { get; private set; } = 1000;
+#else
         [Property]
         public TimeSpan SyncTolerance { get; private set; } = TimeSpan.FromMilliseconds(0.001);
+#endif
 
         [Property]
         public TimeSpan SyncTimeout { get; private set; } = TimeSpan.FromSeconds(10);
@@ -93,7 +99,11 @@ namespace AUTD3Sharp.Link
                         ThreadPriority,
                         (ulong)(StateCheckInterval.TotalMilliseconds * 1000 * 1000),
                         TimerStrategy,
+#if UNITY_2020_2_OR_NEWER
+                        SyncToleranceNs,
+#else
                         (ulong)(SyncTolerance.TotalMilliseconds * 1000 * 1000),
+#endif
                         (ulong)(SyncTimeout.TotalMilliseconds * 1000 * 1000)
                     ).Validate();
                 }
