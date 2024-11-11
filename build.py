@@ -284,6 +284,9 @@ def unity_build(args) -> None:  # noqa: ANN001
         "src/NativeMethods/DriverExt.cs",
         "unity/Assets/Scripts/NativeMethods/DriverExt.cs",
     )
+    config_dir = config.release and "Release" or "Debug"
+    for derive in Path(f"src/obj/{config_dir}/net8.0/generated/AUTD3Sharp.Derive").rglob("*.cs"):
+        shutil.copy(derive, "unity/Assets/Scripts/Derive/")
 
 
 def unity_clear(_) -> None:  # noqa: ANN001
