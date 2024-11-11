@@ -42,15 +42,15 @@ public class SOEMTest()
         Assert.True(
             AUTD3Sharp.NativeMethods.NativeMethodsLinkSOEM.AUTDLinkSOEMIsDefault(
                 builder.BufSize,
-                (ulong)builder.SendCycle.TotalNanoseconds,
-                (ulong)builder.Sync0Cycle.TotalNanoseconds,
+                builder.SendCycle,
+                builder.Sync0Cycle,
                 builder.SyncMode,
                 builder.ProcessPriority,
                 builder.ThreadPriority,
-                (ulong)builder.StateCheckInterval.TotalNanoseconds,
+                builder.StateCheckInterval,
                 builder.TimerStrategy,
-                (ulong)builder.SyncTolerance.TotalNanoseconds,
-                (ulong)builder.SyncTimeout.TotalNanoseconds
+                builder.SyncTolerance,
+                builder.SyncTimeout
             )
         );
     }

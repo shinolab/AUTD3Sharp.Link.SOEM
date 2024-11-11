@@ -27,10 +27,10 @@ namespace AUTD3Sharp.Link
         public uint BufSize { get; private set; } = 32;
 
         [Property]
-        public TimeSpan SendCycle { get; private set; } = TimeSpan.FromMilliseconds(1);
+        public Duration SendCycle { get; private set; } = Duration.FromMillis(1);
 
         [Property]
-        public TimeSpan Sync0Cycle { get; private set; } = TimeSpan.FromMilliseconds(1);
+        public Duration Sync0Cycle { get; private set; } = Duration.FromMillis(1);
 
         [Property]
         public TimerStrategy TimerStrategy { get; private set; } = TimerStrategy.SpinSleep;
@@ -38,20 +38,14 @@ namespace AUTD3Sharp.Link
         [Property]
         public SyncMode SyncMode { get; private set; } = SyncMode.DC;
 
-
-#if UNITY_2020_2_OR_NEWER
         [Property]
-        public ulong SyncToleranceNs { get; private set; } = 1000;
-#else
-        [Property]
-        public TimeSpan SyncTolerance { get; private set; } = TimeSpan.FromMilliseconds(0.001);
-#endif
+        public Duration SyncTolerance { get; private set; } = Duration.FromMicros(1);
 
         [Property]
-        public TimeSpan SyncTimeout { get; private set; } = TimeSpan.FromSeconds(10);
+        public Duration SyncTimeout { get; private set; } = Duration.FromSecs(10);
 
         [Property]
-        public TimeSpan StateCheckInterval { get; private set; } = TimeSpan.FromMilliseconds(100);
+        public Duration StateCheckInterval { get; private set; } = Duration.FromMillis(100);
 
         [Property]
         public ThreadPriorityPtr ThreadPriority { get; private set; } = Link.ThreadPriority.Max;
@@ -90,21 +84,17 @@ namespace AUTD3Sharp.Link
                     return NativeMethodsLinkSOEM.AUTDLinkSOEM(
                         ifnamePtr,
                         BufSize,
-                        (ulong)(SendCycle.TotalMilliseconds * 1000 * 1000),
-                        (ulong)(Sync0Cycle.TotalMilliseconds * 1000 * 1000),
+                        SendCycle,
+                        Sync0Cycle,
                         new ConstPtr { Item1 = Marshal.GetFunctionPointerForDelegate(_errHandler) },
                         new ConstPtr { Item1 = IntPtr.Zero },
                         SyncMode,
                         ProcessPriority,
                         ThreadPriority,
-                        (ulong)(StateCheckInterval.TotalMilliseconds * 1000 * 1000),
+                        StateCheckInterval,
                         TimerStrategy,
-#if UNITY_2020_2_OR_NEWER
-                        SyncToleranceNs,
-#else
-                        (ulong)(SyncTolerance.TotalMilliseconds * 1000 * 1000),
-#endif
-                        (ulong)(SyncTimeout.TotalMilliseconds * 1000 * 1000)
+                        SyncTolerance,
+                        SyncTimeout
                     ).Validate();
                 }
             }
