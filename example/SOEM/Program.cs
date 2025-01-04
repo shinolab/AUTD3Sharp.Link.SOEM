@@ -8,7 +8,7 @@ using static AUTD3Sharp.Units;
 System.Environment.SetEnvironmentVariable("RUST_LOG", "autd3=INFO");
 Tracing.Init();
 
-using var autd = Controller.Builder([new AUTD3(Vector3.Zero)])
+using var autd = Controller.Builder([new AUTD3(Point3.Origin)])
     .Open(SOEM.Builder()
         .WithErrHandler((slave, status) =>
         {
