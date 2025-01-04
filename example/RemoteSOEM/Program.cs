@@ -6,7 +6,7 @@ using AUTD3Sharp.Utils;
 using AUTD3Sharp.Link;
 using static AUTD3Sharp.Units;
 
-using var autd = Controller.Builder([new AUTD3(Vector3.Zero)])
+using var autd = Controller.Builder([new AUTD3(Point3.Origin)])
     .Open(RemoteSOEM.Builder(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8080)));
 
 
