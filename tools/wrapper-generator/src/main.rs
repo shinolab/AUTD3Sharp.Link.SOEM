@@ -61,6 +61,10 @@ fn main() -> Result<()> {
         let crate_path = Path::new(&entry).parent().unwrap();
         generate(&crate_path, "../../src/NativeMethods")?;
         generate(&crate_path, "../../unity/Assets/Scripts/NativeMethods")?;
+        generate(
+            &crate_path,
+            "../../unity-dynamic_freq/Assets/Scripts/NativeMethods",
+        )?;
     }
     Ok(())
 }
