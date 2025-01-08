@@ -245,7 +245,24 @@ def copy_dll_unity(config: Config) -> None:
         content = f.read()
         version = re.search(r"<Version>(.*)</Version>", content).group(1).split(".")
         version = ".".join(version[:4]) if version[2].endswith("rc") else ".".join(version[:3])
-    if not should_update_dll_unity(config, version):
+
+    def should_update_dll_unity() -> bool:
+        if config.is_windows():
+            if not Path("unity/Assets/Plugins/x86_64/autd3capi.dll").is_file():
+                return True
+        elif config.is_macos():
+            if not Path("unity/Assets/Plugins/x86_64/libautd3capi.dylib").is_file():
+                return True
+        elif config.is_linux():  # noqa: SIM102
+            if not Path("unity/Assets/Plugins/x86_64/libautd3capi.so").is_file():
+                return True
+        if not Path("UNITY_VERSION").is_file():
+            return True
+        with Path("UNITY_VERSION").open("r") as f:
+            old_version = f.read().strip()
+        return old_version != version
+
+    if not should_update_dll_unity():
         return
     base_url = f"https://github.com/shinolab/autd3-capi-link-soem/releases/download/v{version}"
     download_and_extract(f"{base_url}/autd3-link-soem-v{version}-win-x64-unity.zip", "unity/Assets/Plugins/x86_64")
@@ -261,36 +278,82 @@ def copy_dll_unity(config: Config) -> None:
     Path("UNITY_VERSION").write_text(version)
 
 
+def copy_dll_unity_dynamic_freq(config: Config) -> None:
+    with Path("src/AUTD3Sharp.Link.SOEM.csproj").open() as f:
+        content = f.read()
+        version = re.search(r"<Version>(.*)</Version>", content).group(1).split(".")
+        version = ".".join(version[:4]) if version[2].endswith("rc") else ".".join(version[:3])
+
+    def should_update_dll_unity() -> bool:
+        if config.is_windows():
+            if not Path("unity-dynamic_freq/Assets/Plugins/x86_64/autd3capi.dll").is_file():
+                return True
+        elif config.is_macos():
+            if not Path("unity-dynamic_freq/Assets/Plugins/x86_64/libautd3capi.dylib").is_file():
+                return True
+        elif config.is_linux():  # noqa: SIM102
+            if not Path("unity-dynamic_freq/Assets/Plugins/x86_64/libautd3capi.so").is_file():
+                return True
+        if not Path("UNITY_DYNAMIC_FREQ_VERSION").is_file():
+            return True
+        with Path("UNITY_DYNAMIC_FREQ_VERSION").open("r") as f:
+            old_version = f.read().strip()
+        return old_version != version
+
+    if not should_update_dll_unity():
+        return
+    base_url = f"https://github.com/shinolab/autd3-capi-link-soem/releases/download/v{version}"
+    download_and_extract(f"{base_url}/autd3-link-soem-v{version}-win-x64-unity-dynamic_freq.zip", "unity-dynamic_freq/Assets/Plugins/x86_64")
+    download_and_extract(f"{base_url}/autd3-link-soem-v{version}-win-aarch64-unity-dynamic_freq.zip", "unity-dynamic_freq/Assets/Plugins/ARM64")
+    download_and_extract(
+        f"{base_url}/autd3-link-soem-v{version}-macos-aarch64-unity-dynamic_freq.tar.gz", "unity-dynamic_freq/Assets/Plugins/aarch64"
+    )
+    download_and_extract(f"{base_url}/autd3-link-soem-v{version}-linux-x64-unity-dynamic_freq.tar.gz", "unity-dynamic_freq/Assets/Plugins/x86_64")
+    shutil.copy("LICENSE", "unity-dynamic_freq/Assets/LICENSE.md")
+    with Path("unity-dynamic_freq/Assets/LICENSE.md").open("a") as f:
+        f.write("\n=========================================================\n")
+        f.write(Path("ThirdPartyNotice.txt").read_text())
+    shutil.copy("CHANGELOG.md", "unity-dynamic_freq/Assets/CHANGELOG.md")
+    remove("lib")
+    Path("UNITY_DYNAMIC_FREQ_VERSION").write_text(version)
+
+
 def unity_build(args) -> None:  # noqa: ANN001
     cs_build(args)
     config = Config(args)
     copy_dll_unity(config)
+    copy_dll_unity_dynamic_freq(config)
     ignore = shutil.ignore_patterns("NativeMethods", ".vs", "bin", "obj")
-    shutil.copytree(
-        "src",
-        "unity/Assets/Scripts",
-        dirs_exist_ok=True,
-        ignore=ignore,
-    )
-    remove("unity/Assets/Scripts/AUTD3Sharp.Link.SOEM.csproj")
-    remove("unity/Assets/Scripts/AUTD3Sharp.Link.SOEM.nuspec")
-    remove("unity/Assets/Scripts/LICENSE.txt")
-    remove("unity/Assets/Scripts/.gitignore")
-    remove("unity/Assets/Scripts/.vs")
-    remove("unity/Assets/Scripts/obj")
-    remove("unity/Assets/Scripts/bin")
-    remove("unity/Assets/Scripts/native")
-    shutil.copy(
-        "src/NativeMethods/DriverExt.cs",
-        "unity/Assets/Scripts/NativeMethods/DriverExt.cs",
-    )
-    config_dir = config.release and "Release" or "Debug"
-    for derive in Path(f"src/obj/{config_dir}/net8.0/generated/AUTD3Sharp.Derive").rglob("*.cs"):
-        shutil.copy(derive, "unity/Assets/Scripts/Derive/")
+
+    def _build(parent) -> None:
+        shutil.copytree(
+            "src",
+            f"{parent}/Assets/Scripts",
+            dirs_exist_ok=True,
+            ignore=ignore,
+        )
+        remove(f"{parent}/Assets/Scripts/AUTD3Sharp.Link.SOEM.csproj")
+        remove(f"{parent}/Assets/Scripts/AUTD3Sharp.Link.SOEM.nuspec")
+        remove(f"{parent}/Assets/Scripts/LICENSE.txt")
+        remove(f"{parent}/Assets/Scripts/.gitignore")
+        remove(f"{parent}/Assets/Scripts/.vs")
+        remove(f"{parent}/Assets/Scripts/obj")
+        remove(f"{parent}/Assets/Scripts/bin")
+        remove(f"{parent}/Assets/Scripts/native")
+        shutil.copy(
+            "src/NativeMethods/DriverExt.cs",
+            f"{parent}/Assets/Scripts/NativeMethods/DriverExt.cs",
+        )
+        config_dir = config.release and "Release" or "Debug"
+        for derive in Path(f"src/obj/{config_dir}/net8.0/generated/AUTD3Sharp.Derive").rglob("*.cs"):
+            shutil.copy(derive, f"{parent}/Assets/Scripts/Derive/")
+
+    _build("unity")
+    _build("unity-dynamic_freq")
 
 
 def unity_clear(_) -> None:  # noqa: ANN001
-    with working_dir("unity"):
+    def _clear() -> None:
         remove(".vs")
         remove("Library")
         remove("Logs")
@@ -305,6 +368,11 @@ def unity_clear(_) -> None:  # noqa: ANN001
         rremove("Assets/Plugins/x86_64/*.dll")
         rremove("Assets/Plugins/aarch64/*.dylib")
         rremove("Assets/Plugins/x86_64/*.so")
+
+    with working_dir("unity"):
+        _clear()
+    with working_dir("unity-dynamic_freq"):
+        _clear()
 
 
 def util_update_ver(args) -> None:  # noqa: ANN001
