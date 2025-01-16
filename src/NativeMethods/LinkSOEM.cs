@@ -37,7 +37,7 @@ namespace AUTD3Sharp.NativeMethods
         public static extern ResultStatus AUTDLinkSOEMTracingInitWithFile(byte* path);
 
         [DllImport(__DllName, EntryPoint = "AUTDLinkSOEM", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern ResultSyncLinkBuilder AUTDLinkSOEM(byte* ifname, uint buf_size, Duration send_cycle, Duration sync0_cycle, ConstPtr err_handler, ConstPtr err_context, SyncMode mode, ProcessPriority process_priority, ThreadPriorityPtr thread_priority, Duration state_check_interval, TimerStrategy timer_strategy, Duration tolerance, Duration sync_timeout);
+        public static extern ResultLinkBuilder AUTDLinkSOEM(byte* ifname, uint buf_size, Duration send_cycle, Duration sync0_cycle, ConstPtr err_handler, ConstPtr err_context, SyncMode mode, ProcessPriority process_priority, ThreadPriorityPtr thread_priority, Duration state_check_interval, TimerStrategy timer_strategy, Duration tolerance, Duration sync_timeout);
 
         [DllImport(__DllName, EntryPoint = "AUTDLinkSOEMIsDefault", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         [return: MarshalAs(UnmanagedType.U1)]
@@ -47,7 +47,7 @@ namespace AUTD3Sharp.NativeMethods
         public static extern uint AUTDLinkSOEMStatusGetMsg(Status src, byte* dst);
 
         [DllImport(__DllName, EntryPoint = "AUTDLinkRemoteSOEM", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern ResultSyncLinkBuilder AUTDLinkRemoteSOEM(byte* addr);
+        public static extern ResultLinkBuilder AUTDLinkRemoteSOEM(byte* addr);
 
         [DllImport(__DllName, EntryPoint = "AUTDLinkSOEMThreadPriorityMin", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern ThreadPriorityPtr AUTDLinkSOEMThreadPriorityMin();

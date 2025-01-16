@@ -76,7 +76,7 @@ namespace AUTD3Sharp.Link
                 }
                 ErrHandler((int)slave, new Link.Status(status, System.Text.Encoding.UTF8.GetString(msgBytes).TrimEnd('\0')));
             };
-            var ifnameBytes = Ffi.toNullTerminatedUtf8(Ifname);
+            var ifnameBytes = Ffi.ToNullTerminatedUtf8(Ifname);
             unsafe
             {
                 fixed (byte* ifnamePtr = ifnameBytes)
@@ -100,7 +100,7 @@ namespace AUTD3Sharp.Link
             }
         }
 
-        SOEM ILinkBuilder<SOEM>.ResolveLink(RuntimePtr _, LinkPtr ptr)
+        SOEM ILinkBuilder<SOEM>.ResolveLink(LinkPtr ptr)
         {
             return new SOEM(_errHandler);
         }
@@ -186,7 +186,7 @@ namespace AUTD3Sharp.Link
             LinkBuilderPtr ILinkBuilder<RemoteSOEM>.Ptr()
             {
                 var ipStr = Ip.ToString();
-                var ipBytes = Ffi.toNullTerminatedUtf8(ipStr);
+                var ipBytes = Ffi.ToNullTerminatedUtf8(ipStr);
                 unsafe
                 {
                     fixed (byte* ipPtr = &ipBytes[0])
@@ -196,7 +196,7 @@ namespace AUTD3Sharp.Link
                 }
             }
 
-            RemoteSOEM ILinkBuilder<RemoteSOEM>.ResolveLink(RuntimePtr _, LinkPtr ptr)
+            RemoteSOEM ILinkBuilder<RemoteSOEM>.ResolveLink(LinkPtr ptr)
             {
                 return new RemoteSOEM();
             }
