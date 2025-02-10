@@ -1,9 +1,8 @@
 using System.Net;
-using Xunit.Abstractions;
 
-namespace tests.Link;
+namespace tests;
 
-public class SOEMTest()
+public class SOEMTest
 {
     [Fact, Trait("require", "soem")]
     public void TestThreadPriority()
@@ -22,42 +21,39 @@ public class SOEMTest()
         var stateChanged = Status.StateChanged;
         var error = Status.Error;
 
-        Assert.Equal(lost, Status.Lost);
-        Assert.NotEqual(lost, stateChanged);
-        Assert.NotEqual(lost, error);
-        Assert.Equal(stateChanged, Status.StateChanged);
-        Assert.NotEqual(stateChanged, lost);
-        Assert.NotEqual(stateChanged, error);
-        Assert.Equal(error, Status.Error);
-        Assert.NotEqual(error, lost);
-        Assert.NotEqual(error, stateChanged);
+        Assert.True(Status.Lost == lost);
+        Assert.True(Status.StateChanged != lost);
+        Assert.True(Status.Error != lost);
+        Assert.False(lost.Equals(null));
+        Assert.True(lost.Equals((object?)lost));
+        Assert.False(lost.Equals((object?)null));
+
+        Assert.True(Status.Error == error);
+        Assert.True(Status.Lost != error);
+        Assert.True(Status.StateChanged != error);
+
+        Assert.True(Status.Error != stateChanged);
+        Assert.True(Status.Lost != stateChanged);
+        Assert.True(Status.StateChanged == stateChanged);
 
         Assert.Equal("", lost.ToString());
     }
 
     [Fact, Trait("require", "soem")]
+    public void TestSOEMOption()
+    {
+        Assert.True(AUTD3Sharp.NativeMethods.NativeMethodsLinkSOEM.AUTDLinkSOEMIsDefault(new SOEMOption().ToNative()));
+    }
+
+    [Fact, Trait("require", "soem")]
     public void TestSOEM()
     {
-        var builder = SOEM.Builder();
-        Assert.True(
-            AUTD3Sharp.NativeMethods.NativeMethodsLinkSOEM.AUTDLinkSOEMIsDefault(
-                builder.BufSize,
-                builder.SendCycle,
-                builder.Sync0Cycle,
-                builder.SyncMode,
-                builder.ProcessPriority,
-                builder.ThreadPriority,
-                builder.StateCheckInterval,
-                builder.TimerStrategy,
-                builder.SyncTolerance,
-                builder.SyncTimeout
-            )
-        );
+        _ = new SOEM((_, _) => { }, new SOEMOption());
     }
 
     [Fact, Trait("require", "soem")]
     public void TestRemoteSOEM()
     {
-        _ = RemoteSOEM.Builder(new IPEndPoint(IPAddress.Parse("172.0.0.1"), 8080));
+        _ = new RemoteSOEM(new IPEndPoint(IPAddress.Parse("172.0.0.1"), 8080));
     }
 }

@@ -10,11 +10,7 @@
     <description>$description$</description>
     <dependencies>
       <group targetFramework="net8.0">
-        <dependency id="AUTD3Sharp" version="29.0.0-rc.16" >
-        </dependency>
-        <dependency id="AUTD3Sharp.Derive" version="29.0.0-rc.16" >
-        	<OutputItemType>Analyzer</OutputItemType>
-			    <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+        <dependency id="AUTD3Sharp" version="29.0.0-rc.19.1" >
         </dependency>
       </group>
     </dependencies>
@@ -25,7 +21,6 @@
     <file src="../README.md" target=""/>
     <file src="bin\$config$\net8.0\$id$.dll" target="lib\net8.0" />
     <file src="native\windows\x64\*.dll" target="runtimes\win-x64\native" />
-    <file src="native\windows\arm\*.dll" target="runtimes\win-arm64\native" />
     <file src="native\linux\x64\*.so" target="runtimes\linux-x64\native" />
     <file src="native\osx\aarch64\*.dylib" target="runtimes\osx-arm64\native" />
   </files>

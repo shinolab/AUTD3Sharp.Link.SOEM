@@ -12,74 +12,83 @@ using AUTD3Sharp.Link;
 
 namespace AUTD3Sharp.NativeMethods
 {
-    public static unsafe partial class NativeMethodsLinkSOEM
+    internal static unsafe partial class NativeMethodsLinkSOEM
     {
         const string __DllName = "autd3capi_link_soem";
 
 
 
         [DllImport(__DllName, EntryPoint = "AUTDAdapterPointer", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern EthernetAdaptersPtr AUTDAdapterPointer();
+        internal static extern EthernetAdaptersPtr AUTDAdapterPointer();
 
         [DllImport(__DllName, EntryPoint = "AUTDAdapterGetSize", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern uint AUTDAdapterGetSize(EthernetAdaptersPtr adapters);
+        internal static extern uint AUTDAdapterGetSize(EthernetAdaptersPtr adapters);
 
         [DllImport(__DllName, EntryPoint = "AUTDAdapterGetAdapter", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern void AUTDAdapterGetAdapter(EthernetAdaptersPtr adapters, uint idx, byte* desc, byte* name);
+        internal static extern void AUTDAdapterGetAdapter(EthernetAdaptersPtr adapters, uint idx, byte* desc, byte* name);
 
         [DllImport(__DllName, EntryPoint = "AUTDAdapterPointerDelete", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern void AUTDAdapterPointerDelete(EthernetAdaptersPtr adapters);
+        internal static extern void AUTDAdapterPointerDelete(EthernetAdaptersPtr adapters);
 
         [DllImport(__DllName, EntryPoint = "AUTDLinkSOEMTracingInit", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern void AUTDLinkSOEMTracingInit();
+        internal static extern void AUTDLinkSOEMTracingInit();
 
         [DllImport(__DllName, EntryPoint = "AUTDLinkSOEMTracingInitWithFile", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern ResultStatus AUTDLinkSOEMTracingInitWithFile(byte* path);
+        internal static extern ResultStatus AUTDLinkSOEMTracingInitWithFile(byte* path);
 
         [DllImport(__DllName, EntryPoint = "AUTDLinkSOEM", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern ResultLinkBuilder AUTDLinkSOEM(byte* ifname, uint buf_size, Duration send_cycle, Duration sync0_cycle, ConstPtr err_handler, ConstPtr err_context, SyncMode mode, ProcessPriority process_priority, ThreadPriorityPtr thread_priority, Duration state_check_interval, TimerStrategy timer_strategy, Duration tolerance, Duration sync_timeout);
+        internal static extern ResultLink AUTDLinkSOEM(ConstPtr err_handler, ConstPtr err_context, SOEMOption option);
 
         [DllImport(__DllName, EntryPoint = "AUTDLinkSOEMIsDefault", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         [return: MarshalAs(UnmanagedType.U1)]
-        public static extern bool AUTDLinkSOEMIsDefault(uint buf_size, Duration send_cycle, Duration sync0_cycle, SyncMode mode, ProcessPriority process_priority, ThreadPriorityPtr thread_priority, Duration state_check_interval, TimerStrategy timer_strategy, Duration tolerance, Duration sync_timeout);
+        internal static extern bool AUTDLinkSOEMIsDefault(SOEMOption option);
 
         [DllImport(__DllName, EntryPoint = "AUTDLinkSOEMStatusGetMsg", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern uint AUTDLinkSOEMStatusGetMsg(Status src, byte* dst);
+        internal static extern uint AUTDLinkSOEMStatusGetMsg(Status src, byte* dst);
 
         [DllImport(__DllName, EntryPoint = "AUTDLinkRemoteSOEM", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern ResultLinkBuilder AUTDLinkRemoteSOEM(byte* addr);
+        internal static extern ResultLink AUTDLinkRemoteSOEM(byte* addr);
 
         [DllImport(__DllName, EntryPoint = "AUTDLinkSOEMThreadPriorityMin", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern ThreadPriorityPtr AUTDLinkSOEMThreadPriorityMin();
+        internal static extern ThreadPriorityPtr AUTDLinkSOEMThreadPriorityMin();
 
         [DllImport(__DllName, EntryPoint = "AUTDLinkSOEMThreadPriorityCrossplatform", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern ThreadPriorityPtr AUTDLinkSOEMThreadPriorityCrossplatform(byte value);
+        internal static extern ThreadPriorityPtr AUTDLinkSOEMThreadPriorityCrossplatform(byte value);
 
         [DllImport(__DllName, EntryPoint = "AUTDLinkSOEMThreadPriorityMax", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern ThreadPriorityPtr AUTDLinkSOEMThreadPriorityMax();
+        internal static extern ThreadPriorityPtr AUTDLinkSOEMThreadPriorityMax();
 
 
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe partial struct EthernetAdaptersPtr
+    internal unsafe partial struct EthernetAdaptersPtr
     {
         public IntPtr Item1;
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe partial struct ThreadPriorityPtr
+    internal unsafe partial struct SOEMOption
+    {
+        public byte* ifname;
+        public uint buf_size;
+        public Duration send_cycle;
+        public Duration sync0_cycle;
+        public SyncMode sync_mode;
+        public ProcessPriority process_priority;
+        public ThreadPriorityPtr thread_priority;
+        public Duration state_check_interval;
+        public TimerStrategy timer_strategy;
+        public Duration sync_tolerance;
+        public Duration sync_timeout;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    internal unsafe partial struct ThreadPriorityPtr
     {
         public IntPtr Item1;
     }
 
-
-    public enum Status : byte
-    {
-        Error = 0,
-        StateChanged = 1,
-        Lost = 2,
-    }
 
 
 }

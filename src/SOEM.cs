@@ -4,9 +4,8 @@ using System.Collections.Generic;
 using System.Net;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using AUTD3Sharp.Derive;
-using AUTD3Sharp.Driver;
 using AUTD3Sharp.NativeMethods;
+using AUTD3Sharp.Driver.FPGA.Defined;
 
 #if UNITY_2020_2_OR_NEWER
 #nullable enable
@@ -14,56 +13,57 @@ using AUTD3Sharp.NativeMethods;
 
 namespace AUTD3Sharp.Link
 {
-    [UnmanagedFunctionPointer(CallingConvention.Cdecl, CharSet = CharSet.Ansi, BestFitMapping = false, ThrowOnUnmappableChar = true)]
-    delegate void ErrHandlerDelegate(IntPtr context, uint slave, AUTD3Sharp.NativeMethods.Status status);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl, CharSet = CharSet.Ansi, BestFitMapping = false,
+        ThrowOnUnmappableChar = true)]
+    internal delegate void ErrHandlerDelegate(IntPtr context, uint slave, NativeMethods.Status status);
 
-    [Builder]
-    public sealed partial class SOEMBuilder : ILinkBuilder<SOEM>
+    public class SOEMOption
     {
-        [Property]
-        public string Ifname { get; private set; } = string.Empty;
+        public string Ifname { get; init; } = string.Empty;
+        public uint BufSize { get; init; } = 32;
+        public Duration SendCycle { get; init; } = Duration.FromMillis(1);
+        public Duration Sync0Cycle { get; init; } = Duration.FromMillis(1);
+        public TimerStrategy TimerStrategy { get; init; } = TimerStrategy.SpinSleep;
+        public SyncMode SyncMode { get; init; } = SyncMode.DC;
+        public Duration SyncTolerance { get; init; } = Duration.FromMicros(1);
+        public Duration SyncTimeout { get; init; } = Duration.FromSecs(10);
+        public Duration StateCheckInterval { get; init; } = Duration.FromMillis(100);
+        public ThreadPriority ThreadPriority { get; init; } = ThreadPriority.Max;
+        public ProcessPriority ProcessPriority { get; init; } = ProcessPriority.High;
 
-        [Property]
-        public uint BufSize { get; private set; } = 32;
-
-        [Property]
-        public Duration SendCycle { get; private set; } = Duration.FromMillis(1);
-
-        [Property]
-        public Duration Sync0Cycle { get; private set; } = Duration.FromMillis(1);
-
-        [Property]
-        public TimerStrategy TimerStrategy { get; private set; } = TimerStrategy.SpinSleep;
-
-        [Property]
-        public SyncMode SyncMode { get; private set; } = SyncMode.DC;
-
-        [Property]
-        public Duration SyncTolerance { get; private set; } = Duration.FromMicros(1);
-
-        [Property]
-        public Duration SyncTimeout { get; private set; } = Duration.FromSecs(10);
-
-        [Property]
-        public Duration StateCheckInterval { get; private set; } = Duration.FromMillis(100);
-
-        [Property]
-        public ThreadPriorityPtr ThreadPriority { get; private set; } = Link.ThreadPriority.Max;
-
-        [Property]
-        public ProcessPriority ProcessPriority { get; private set; } = ProcessPriority.High;
-
-        [Property]
-        public Action<int, Status> ErrHandler { get; private set; } = (_, _) => { };
-
-        private ErrHandlerDelegate? _errHandler;
-
-        internal SOEMBuilder()
+        internal NativeMethods.SOEMOption ToNative()
         {
-            _errHandler = null;
+            unsafe
+            {
+                var ifnameBytes = Ffi.ToNullTerminatedUtf8(Ifname);
+                fixed (byte* pIfname = &ifnameBytes[0])
+                {
+                    return new NativeMethods.SOEMOption
+                    {
+                        ifname = pIfname,
+                        buf_size = BufSize,
+                        send_cycle = SendCycle,
+                        sync0_cycle = Sync0Cycle,
+                        timer_strategy = TimerStrategy,
+                        sync_mode = SyncMode,
+                        sync_tolerance = SyncTolerance,
+                        sync_timeout = SyncTimeout,
+                        state_check_interval = StateCheckInterval,
+                        thread_priority = ThreadPriority.Ptr,
+                        process_priority = ProcessPriority
+                    };
+                }
+            }
         }
+    }
 
-        LinkBuilderPtr ILinkBuilder<SOEM>.Ptr()
+    public sealed class SOEM : Driver.Link
+    {
+        private readonly ErrHandlerDelegate _errHandler;
+        private readonly SOEMOption _option;
+
+        [ExcludeFromCodeCoverage]
+        public SOEM(Action<int, Status> errHandler, SOEMOption option)
         {
             _errHandler = (_, slave, status) =>
             {
@@ -74,52 +74,18 @@ namespace AUTD3Sharp.Link
                     fixed (byte* p = &msgBytes[0]) NativeMethodsLinkSOEM.AUTDLinkSOEMStatusGetMsg(status, p);
 #pragma warning restore CA1806
                 }
-                ErrHandler((int)slave, new Link.Status(status, System.Text.Encoding.UTF8.GetString(msgBytes).TrimEnd('\0')));
+                errHandler((int)slave, new Status(status, System.Text.Encoding.UTF8.GetString(msgBytes).TrimEnd('\0')));
             };
-            var ifnameBytes = Ffi.ToNullTerminatedUtf8(Ifname);
-            unsafe
-            {
-                fixed (byte* ifnamePtr = ifnameBytes)
-                {
-                    return NativeMethodsLinkSOEM.AUTDLinkSOEM(
-                        ifnamePtr,
-                        BufSize,
-                        SendCycle,
-                        Sync0Cycle,
-                        new ConstPtr { Item1 = Marshal.GetFunctionPointerForDelegate(_errHandler) },
-                        new ConstPtr { Item1 = IntPtr.Zero },
-                        SyncMode,
-                        ProcessPriority,
-                        ThreadPriority,
-                        StateCheckInterval,
-                        TimerStrategy,
-                        SyncTolerance,
-                        SyncTimeout
-                    ).Validate();
-                }
-            }
+            _option = option;
         }
 
-        SOEM ILinkBuilder<SOEM>.ResolveLink(LinkPtr ptr)
-        {
-            return new SOEM(_errHandler);
-        }
-    }
+        [ExcludeFromCodeCoverage]
+        public override LinkPtr Resolve() => NativeMethodsLinkSOEM.AUTDLinkSOEM(
+                            new ConstPtr { Item1 = Marshal.GetFunctionPointerForDelegate(_errHandler) },
+                            new ConstPtr { Item1 = IntPtr.Zero },
+                            _option.ToNative()).Validate();
 
-    public sealed class SOEM
-    {
-        private readonly ErrHandlerDelegate? _errHandler;
-
-        internal SOEM(ErrHandlerDelegate? errHandler)
-        {
-            _errHandler = errHandler;
-        }
-
-        public static SOEMBuilder Builder()
-        {
-            return new SOEMBuilder();
-        }
-
+        [ExcludeFromCodeCoverage]
         private static EtherCATAdapter GetAdapter(EthernetAdaptersPtr handle, uint i)
         {
             unsafe
@@ -127,20 +93,17 @@ namespace AUTD3Sharp.Link
                 var sbDesc = new byte[128];
                 var sbName = new byte[128];
                 fixed (byte* dp = &sbDesc[0])
-                fixed (byte* np = &sbName[0])
-                {
-                    NativeMethodsLinkSOEM.AUTDAdapterGetAdapter(handle, i, dp, np);
-                }
+                fixed (byte* np = &sbName[0]) NativeMethodsLinkSOEM.AUTDAdapterGetAdapter(handle, i, dp, np);
                 return new EtherCATAdapter(System.Text.Encoding.UTF8.GetString(sbDesc), System.Text.Encoding.UTF8.GetString(sbName));
             }
         }
 
+        [ExcludeFromCodeCoverage]
         public static IEnumerable<EtherCATAdapter> EnumerateAdapters()
         {
             var handle = NativeMethodsLinkSOEM.AUTDAdapterPointer();
             var len = NativeMethodsLinkSOEM.AUTDAdapterGetSize(handle);
-            for (uint i = 0; i < len; i++)
-                yield return GetAdapter(handle, i);
+            for (uint i = 0; i < len; i++) yield return GetAdapter(handle, i);
             NativeMethodsLinkSOEM.AUTDAdapterPointerDelete(handle);
         }
 
@@ -172,42 +135,28 @@ namespace AUTD3Sharp.Link
         }
     }
 
-    public sealed class RemoteSOEM
+    public sealed class RemoteSOEM : Driver.Link
     {
-        public sealed class RemoteSOEMBuilder : ILinkBuilder<RemoteSOEM>
+        private readonly IPEndPoint _ip;
+
+        public RemoteSOEM(IPEndPoint ip)
         {
-            public IPEndPoint Ip { get; }
-
-            internal RemoteSOEMBuilder(IPEndPoint ip)
-            {
-                Ip = ip;
-            }
-
-            LinkBuilderPtr ILinkBuilder<RemoteSOEM>.Ptr()
-            {
-                var ipStr = Ip.ToString();
-                var ipBytes = Ffi.ToNullTerminatedUtf8(ipStr);
-                unsafe
-                {
-                    fixed (byte* ipPtr = &ipBytes[0])
-                    {
-                        return NativeMethodsLinkSOEM.AUTDLinkRemoteSOEM(ipPtr).Validate();
-                    }
-                }
-            }
-
-            RemoteSOEM ILinkBuilder<RemoteSOEM>.ResolveLink(LinkPtr ptr)
-            {
-                return new RemoteSOEM();
-            }
+            _ip = ip;
         }
 
-        public static RemoteSOEMBuilder Builder(IPEndPoint ip)
+        [ExcludeFromCodeCoverage]
+        public override LinkPtr Resolve()
         {
-            return new RemoteSOEMBuilder(ip);
+            var ipBytes = Ffi.ToNullTerminatedUtf8(_ip.Address.ToString());
+            unsafe
+            {
+                fixed (byte* ipPtr = &ipBytes[0])
+                    return NativeMethodsLinkSOEM.AUTDLinkRemoteSOEM(ipPtr).Validate();
+            }
         }
     }
 
+    [ExcludeFromCodeCoverage]
     public readonly struct EtherCATAdapter : IEquatable<EtherCATAdapter>
     {
         public string Desc { get; }
@@ -227,14 +176,22 @@ namespace AUTD3Sharp.Link
         public override int GetHashCode() => Desc.GetHashCode() ^ Name.GetHashCode();
     }
 
-    public static class ThreadPriority
+    public class ThreadPriority
     {
-        public static ThreadPriorityPtr Min = NativeMethodsLinkSOEM.AUTDLinkSOEMThreadPriorityMin();
-        public static ThreadPriorityPtr Max = NativeMethodsLinkSOEM.AUTDLinkSOEMThreadPriorityMax();
-        public static ThreadPriorityPtr Crossplatform(byte value)
+        internal readonly ThreadPriorityPtr Ptr;
+
+        private ThreadPriority(ThreadPriorityPtr ptr)
+        {
+            Ptr = ptr;
+        }
+
+        public static ThreadPriority Min = new(NativeMethodsLinkSOEM.AUTDLinkSOEMThreadPriorityMin());
+        public static ThreadPriority Max = new(NativeMethodsLinkSOEM.AUTDLinkSOEMThreadPriorityMax());
+
+        public static ThreadPriority Crossplatform(byte value)
         {
             if (value > 99) throw new ArgumentOutOfRangeException(nameof(value), "value must be between 0 and 99");
-            return NativeMethodsLinkSOEM.AUTDLinkSOEMThreadPriorityCrossplatform(value);
+            return new ThreadPriority(NativeMethodsLinkSOEM.AUTDLinkSOEMThreadPriorityCrossplatform(value));
         }
     }
 
@@ -249,37 +206,17 @@ namespace AUTD3Sharp.Link
             _msg = msg;
         }
 
-        public static Status Lost => new Status(NativeMethods.Status.Lost, "");
-        public static Status StateChanged => new Status(NativeMethods.Status.StateChanged, "");
-        public static Status Error => new Status(NativeMethods.Status.Error, "");
+        public static Status Lost => new(NativeMethods.Status.Lost, "");
+        public static Status StateChanged => new(NativeMethods.Status.StateChanged, "");
+        public static Status Error => new(NativeMethods.Status.Error, "");
 
-        public override string ToString()
-        {
-            return _msg;
-        }
+        public override string ToString() => _msg;
 
-        [ExcludeFromCodeCoverage]
-        public bool Equals(Status? other)
-        {
-            if (ReferenceEquals(null, other)) return false;
-            if (ReferenceEquals(this, other)) return true;
-            return _inner == other._inner;
-        }
-
-        [ExcludeFromCodeCoverage]
-        public override bool Equals(object? obj)
-        {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != GetType()) return false;
-            return Equals((Status)obj);
-        }
-
-        [ExcludeFromCodeCoverage]
-        public override int GetHashCode()
-        {
-            return HashCode.Combine((int)_inner);
-        }
+        public static bool operator ==(Status left, Status right) => left.Equals(right);
+        public static bool operator !=(Status left, Status right) => !left.Equals(right);
+        public bool Equals(Status? other) => other is not null && _inner.Equals(other._inner);
+        public override bool Equals(object? obj) => obj is Status other && Equals(other);
+        [ExcludeFromCodeCoverage] public override int GetHashCode() => _inner.GetHashCode();
     }
 }
 

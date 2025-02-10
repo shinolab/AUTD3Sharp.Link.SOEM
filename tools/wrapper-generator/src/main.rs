@@ -34,14 +34,13 @@ fn generate<P1: AsRef<Path>, P2: AsRef<Path>>(crate_path: P1, path: P2) -> Resul
         let path = path?;
         Ok(acc.input_extern_file(path))
     })?
-    .always_included_types(["ProcessPriority"])
     .csharp_dll_name(dll_name)
     .csharp_class_name(format!("NativeMethods{}", class_name))
     .csharp_namespace("AUTD3Sharp.NativeMethods")
     .csharp_import_namespace("AUTD3Sharp.Utils")
     .csharp_import_namespace("AUTD3Sharp.Link")
     .csharp_generate_const_filter(|_| true)
-    .csharp_class_accessibility("public")
+    .csharp_class_accessibility("internal")
     .generate_csharp_file(&out_file)
     .map_err(|_| anyhow::anyhow!("failed to generate cs wrapper"))?;
 
@@ -61,10 +60,6 @@ fn main() -> Result<()> {
         let crate_path = Path::new(&entry).parent().unwrap();
         generate(&crate_path, "../../src/NativeMethods")?;
         generate(&crate_path, "../../unity/Assets/Scripts/NativeMethods")?;
-        generate(
-            &crate_path,
-            "../../unity-dynamic_freq/Assets/Scripts/NativeMethods",
-        )?;
     }
     Ok(())
 }
