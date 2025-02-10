@@ -5,7 +5,7 @@
     <LangVersion>10.0</LangVersion>
     <Platforms>AnyCPU</Platforms>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>29.0.0-rc.16</Version>
+    <Version>29.0.0-rc.19</Version>
     <Authors>Shun Suzuki</Authors>
     <Company>Shinolab</Company>
     <Description>autd3-link-soem library wrapper for .Net</Description>
@@ -27,8 +27,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="AUTD3Sharp" Version="29.0.0-rc.16" />
-    <PackageReference Include="AUTD3Sharp.Derive" Version="29.0.0-rc.16" />
+    <PackageReference Include="AUTD3Sharp" Version="29.0.0-rc.19.1" />
   </ItemGroup>
 
   <Target Name="SetNuspecProperties" BeforeTargets="GenerateNuspec">
@@ -44,7 +43,6 @@
   <Target Name="GetNativeLibraryFiles">
   <ItemGroup>
     <BuildOutputInPackage Include="native\windows\x64\*.dll" />
-    <BuildOutputInPackage Include="native\windows\arm\*.dll" />
     <BuildOutputInPackage Include="native\linux\x64\*.so" />
     <BuildOutputInPackage Include="native\osx\aarch64\*.dylib" />
   </ItemGroup>
