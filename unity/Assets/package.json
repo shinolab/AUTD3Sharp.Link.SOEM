@@ -16,7 +16,7 @@
         "url": "https://github.com/shinolab/AUTD3Sharp.Link.SOEM.git"
     },
     "dependencies": {
-        "com.shinolab.autd3": "29.0.0"
+        "com.shinolab.autd3": "30.0.1"
     },
     "samples": [
         {
