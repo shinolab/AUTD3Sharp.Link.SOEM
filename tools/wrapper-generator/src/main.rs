@@ -26,13 +26,35 @@ fn generate<P1: AsRef<Path>, P2: AsRef<Path>>(crate_path: P1, path: P2) -> Resul
     let dll_name = format!("autd3capi_{}", crate_name.replace('-', "_"));
     let class_name = to_class_name(crate_name);
 
+    let temp_dir = tempfile::tempdir()?;
     glob::glob(&format!(
         "{}/**/*.rs",
         crate_path.as_ref().join("src").display()
     ))?
     .try_fold(csbindgen::Builder::default(), |acc, path| -> Result<_> {
-        let path = path?;
-        Ok(acc.input_extern_file(path))
+        use std::io::Write;
+
+        let orig_path = path?.canonicalize()?;
+        let orig_file = std::fs::read_to_string(&orig_path)?;
+        let orig_file = orig_file.replace("#[unsafe(no_mangle)]", "#[no_mangle]");
+        let tmp_path = temp_dir.path().join(
+            orig_path
+                .display()
+                .to_string()
+                .replace(
+                    &crate_path
+                        .as_ref()
+                        .join("src")
+                        .canonicalize()?
+                        .display()
+                        .to_string(),
+                    "",
+                )
+                .replace("\\", "_"),
+        );
+        let mut file = std::fs::File::create(&tmp_path)?;
+        file.write_all(orig_file.as_bytes())?;
+        Ok(acc.input_extern_file(tmp_path))
     })?
     .csharp_dll_name(dll_name)
     .csharp_class_name(format!("NativeMethods{}", class_name))
