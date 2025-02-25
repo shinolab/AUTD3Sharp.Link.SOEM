@@ -12,7 +12,7 @@ using static AUTD3Sharp.Units;
 
 public class SimpleAUTDController : MonoBehaviour
 {
-    private Controller<AUTD3Sharp.Link.SOEM>? _autd = null;
+    private Controller? _autd = null;
     public GameObject? Target = null;
 
     private Vector3 _oldPosition;
