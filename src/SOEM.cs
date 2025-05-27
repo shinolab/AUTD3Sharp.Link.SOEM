@@ -5,7 +5,7 @@ using System.Net;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using AUTD3Sharp.NativeMethods;
-using AUTD3Sharp.Driver.FPGA.Defined;
+using AUTD3Sharp.Driver.FPGA.Common;
 
 #if UNITY_2020_2_OR_NEWER
 #nullable enable
