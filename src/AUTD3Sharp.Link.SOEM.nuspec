@@ -10,7 +10,7 @@
     <description>$description$</description>
     <dependencies>
       <group targetFramework="net8.0">
-        <dependency id="AUTD3Sharp" version="33.0.0" >
+        <dependency id="AUTD3Sharp" version="34.0.0.1" >
         </dependency>
       </group>
     </dependencies>

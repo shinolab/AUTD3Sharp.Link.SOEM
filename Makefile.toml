@@ -150,7 +150,7 @@ for file in Path("src/NativeMethods").rglob("*.cs"):
             result = pattern.match(line)
             if result:
                 defined_methods.add(result.group(1))
-defined_methods = set(filter(lambda x: x != "AUTDLinkSOEMTracingInit", defined_methods))
+print(defined_methods)
 used_methods = set()
 pattern = re.compile("NativeMethods.*?\\.(AUTD.*?)\\(")
 paths: set[Path] = set()
@@ -235,7 +235,7 @@ import sys
 import tarfile
 import urllib.request
 from pathlib import Path
-
+import contextlib
 
 def download_and_extract(url: str, *dest_dirs: str) -> None:
     tmp_file = Path("tmp.zip" if url.endswith(".zip") else "tmp.tar.gz")
@@ -258,6 +258,8 @@ def download_and_extract(url: str, *dest_dirs: str) -> None:
         for dest_dir in dest_dirs:
             shutil.copy(so, dest_dir)
     shutil.rmtree("bin")
+    with contextlib.suppress(FileNotFoundError):
+        shutil.rmtree("lib")
 
 
 def should_update_dll(version: str) -> bool:
@@ -290,17 +292,17 @@ if not should_update_dll(version):
 
 base_url = f"https://github.com/shinolab/autd3-capi-link-soem/releases/download/v{version}"
 download_and_extract(
-    f"{base_url}/autd3-link-soem-v{version}-win-x64-shared.zip",
+    f"{base_url}/autd3-link-soem-v{version}-win-x64.zip",
     "src/native/windows/x64",
     "tests",
 )
 download_and_extract(
-    f"{base_url}/autd3-link-soem-v{version}-macos-aarch64-shared.tar.gz",
+    f"{base_url}/autd3-link-soem-v{version}-macos-aarch64.tar.gz",
     "src/native/osx/aarch64",
     "tests",
 )
 download_and_extract(
-    f"{base_url}/autd3-link-soem-v{version}-linux-x64-shared.tar.gz",
+    f"{base_url}/autd3-link-soem-v{version}-linux-x64.tar.gz",
     "src/native/linux/x64",
     "tests",
 )
