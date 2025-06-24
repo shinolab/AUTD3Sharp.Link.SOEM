@@ -37,7 +37,7 @@ namespace AUTD3Sharp.NativeMethods
         internal static extern ResultStatus AUTDLinkSOEMTracingInitWithFile(byte* path);
 
         [DllImport(__DllName, EntryPoint = "AUTDLinkSOEM", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        internal static extern ResultLink AUTDLinkSOEM(ConstPtr err_handler, ConstPtr err_context, SOEMOption option);
+        internal static extern ResultLink AUTDLinkSOEM(ConstPtr err_handler, ConstPtr err_context, SOEMOption option, SleeperWrap sleeper);
 
         [DllImport(__DllName, EntryPoint = "AUTDLinkSOEMIsDefault", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         [return: MarshalAs(UnmanagedType.U1)]
@@ -74,11 +74,9 @@ namespace AUTD3Sharp.NativeMethods
         public uint buf_size;
         public Duration send_cycle;
         public Duration sync0_cycle;
-        public SyncMode sync_mode;
         public ProcessPriority process_priority;
         public ThreadPriorityPtr thread_priority;
         public Duration state_check_interval;
-        public TimerStrategy timer_strategy;
         public Duration sync_tolerance;
         public Duration sync_timeout;
     }

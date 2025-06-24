@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Net;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using AUTD3Sharp;
 using AUTD3Sharp.NativeMethods;
 using AUTD3Sharp.Driver.FPGA.Common;
 
@@ -23,8 +24,6 @@ namespace AUTD3Sharp.Link
         public uint BufSize { get; init; } = 32;
         public Duration SendCycle { get; init; } = Duration.FromMillis(1);
         public Duration Sync0Cycle { get; init; } = Duration.FromMillis(1);
-        public TimerStrategy TimerStrategy { get; init; } = TimerStrategy.SpinSleep;
-        public SyncMode SyncMode { get; init; } = SyncMode.DC;
         public Duration SyncTolerance { get; init; } = Duration.FromMicros(1);
         public Duration SyncTimeout { get; init; } = Duration.FromSecs(10);
         public Duration StateCheckInterval { get; init; } = Duration.FromMillis(100);
@@ -44,8 +43,6 @@ namespace AUTD3Sharp.Link
                         buf_size = BufSize,
                         send_cycle = SendCycle,
                         sync0_cycle = Sync0Cycle,
-                        timer_strategy = TimerStrategy,
-                        sync_mode = SyncMode,
                         sync_tolerance = SyncTolerance,
                         sync_timeout = SyncTimeout,
                         state_check_interval = StateCheckInterval,
@@ -61,9 +58,10 @@ namespace AUTD3Sharp.Link
     {
         private readonly ErrHandlerDelegate _errHandler;
         private readonly SOEMOption _option;
+        private readonly SleeperWrap _sleeper;
 
         [ExcludeFromCodeCoverage]
-        public SOEM(Action<int, Status> errHandler, SOEMOption option)
+        private SOEM(Action<int, Status> errHandler, SOEMOption option, ISleeper sleep)
         {
             _errHandler = (_, slave, status) =>
             {
@@ -77,13 +75,23 @@ namespace AUTD3Sharp.Link
                 errHandler((int)slave, new Status(status, System.Text.Encoding.UTF8.GetString(msgBytes).TrimEnd('\0')));
             };
             _option = option;
+            _sleeper = sleep.ToNative();
         }
+
+        [ExcludeFromCodeCoverage]
+        public SOEM(Action<int, Status> errHandler, SOEMOption option) : this(errHandler, option, new SpinSleeper())
+        {
+        }
+
+        [ExcludeFromCodeCoverage]
+        public static SOEM WithSleeper(Action<int, Status> errHandler, SOEMOption option, ISleeper sleep) => new SOEM(errHandler, option, sleep);
 
         [ExcludeFromCodeCoverage]
         public override LinkPtr Resolve() => NativeMethodsLinkSOEM.AUTDLinkSOEM(
                             new ConstPtr { Item1 = Marshal.GetFunctionPointerForDelegate(_errHandler) },
                             new ConstPtr { Item1 = IntPtr.Zero },
-                            _option.ToNative()).Validate();
+                            _option.ToNative(),
+                            _sleeper).Validate();
 
         [ExcludeFromCodeCoverage]
         private static EtherCATAdapter GetAdapter(EthernetAdaptersPtr handle, uint i)
@@ -112,23 +120,20 @@ namespace AUTD3Sharp.Link
 #if UNITY_2020_2_OR_NEWER
             public static void Init(string path)
             {
-                AUTD3Sharp.Tracing.ExtTracing += (pathBytes) => 
+                unsafe
                 {
-                    unsafe
+                    fixed (byte* pathPtr = &pathBytes[0])
                     {
-                        fixed (byte* pathPtr = &pathBytes[0])
-                        {
-                            NativeMethodsLinkSOEM.AUTDLinkSOEMTracingInitWithFile(pathPtr);
-                        }
+                        NativeMethodsLinkSOEM.AUTDLinkSOEMTracingInitWithFile(pathPtr);
                     }
-                };
+                }
             }
 #else
 #pragma warning disable CA2255
             [ModuleInitializer]
             public static void Init()
             {
-                AUTD3Sharp.Tracing.ExtTracing += NativeMethodsLinkSOEM.AUTDLinkSOEMTracingInit;
+                NativeMethodsLinkSOEM.AUTDLinkSOEMTracingInit();
             }
 #pragma warning restore CA2255
 #endif

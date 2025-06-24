@@ -15,19 +15,6 @@ namespace AUTD3Sharp
 
     namespace Link
     {
-        public enum SyncMode : byte
-        {
-            DC = 0,
-            FreeRun = 1
-        }
-
-        public enum TimerStrategy : byte
-        {
-            SpinSleep = 0,
-            StdSleep = 1,
-            SpinWait = 2
-        }
-
         public enum ProcessPriority : byte
         {
             Idle = 0,
