@@ -79,6 +79,7 @@ namespace AUTD3Sharp.NativeMethods
         public Duration state_check_interval;
         public Duration sync_tolerance;
         public Duration sync_timeout;
+        public int affinity;
     }
 
     [StructLayout(LayoutKind.Sequential)]

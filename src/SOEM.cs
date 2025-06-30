@@ -21,7 +21,7 @@ namespace AUTD3Sharp.Link
     public class SOEMOption
     {
         public string Ifname { get; init; } = string.Empty;
-        public uint BufSize { get; init; } = 32;
+        public uint BufSize { get; init; } = 16;
         public Duration SendCycle { get; init; } = Duration.FromMillis(1);
         public Duration Sync0Cycle { get; init; } = Duration.FromMillis(1);
         public Duration SyncTolerance { get; init; } = Duration.FromMicros(1);
@@ -29,6 +29,7 @@ namespace AUTD3Sharp.Link
         public Duration StateCheckInterval { get; init; } = Duration.FromMillis(100);
         public ThreadPriority ThreadPriority { get; init; } = ThreadPriority.Max;
         public ProcessPriority ProcessPriority { get; init; } = ProcessPriority.High;
+        public CoreId? Affinity { get; init; } = null;
 
         internal NativeMethods.SOEMOption ToNative()
         {
@@ -47,7 +48,8 @@ namespace AUTD3Sharp.Link
                         sync_timeout = SyncTimeout,
                         state_check_interval = StateCheckInterval,
                         thread_priority = ThreadPriority.Ptr,
-                        process_priority = ProcessPriority
+                        process_priority = ProcessPriority,
+                        affinity = Affinity is null ? -1 : (int)Affinity.Id,
                     };
                 }
             }
@@ -198,6 +200,11 @@ namespace AUTD3Sharp.Link
             if (value > 99) throw new ArgumentOutOfRangeException(nameof(value), "value must be between 0 and 99");
             return new ThreadPriority(NativeMethodsLinkSOEM.AUTDLinkSOEMThreadPriorityCrossplatform(value));
         }
+    }
+
+    public class CoreId
+    {
+        public uint Id { get; }
     }
 
     public class Status : IEquatable<Status>
