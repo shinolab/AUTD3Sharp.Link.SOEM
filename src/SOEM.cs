@@ -122,6 +122,7 @@ namespace AUTD3Sharp.Link
 #if UNITY_2020_2_OR_NEWER
             public static void Init(string path)
             {
+                var pathBytes = Ffi.ToNullTerminatedUtf8(path);
                 unsafe
                 {
                     fixed (byte* pathPtr = &pathBytes[0])
